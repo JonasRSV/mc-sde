@@ -1,4 +1,4 @@
-from core import SDE
+from sdepy.core import SDE
 import numpy as np
 from typing import Callable, Tuple
 
@@ -17,13 +17,16 @@ class Ito1D(SDE):
             raise Exception("Ito1D SDE missing argument sigma")
 
         self.particles = particles
-        self.x = np.repeat(x0, particles)
+        self.x = x0
         self.drift = drift
         self.diffusion = diffusion
         self.sigma = sigma
         self.t = t0
         self.dt = dt
         self.T = T
+
+    def preprocess(self):
+        self.x = np.repeat(self.x, self.particles)
 
     def euler_maruyama(self) -> Tuple[np.float64, np.ndarray]:
         dW = np.random.normal(0, self.sigma, size=self.particles) * np.sqrt(self.dt)
@@ -35,3 +38,7 @@ class Ito1D(SDE):
 
     def step(self) -> Tuple[np.float64, np.ndarray]:
         return self.euler_maruyama()
+
+    def stop(self) -> bool:
+        return self.t >= self.T
+
