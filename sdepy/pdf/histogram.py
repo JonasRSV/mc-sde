@@ -3,6 +3,8 @@ import numpy as np
 from sdepy.core import PDF
 from collections import defaultdict
 
+epsilon = 1e-5
+
 
 class Simple1DHistogram(PDF):
 
@@ -37,7 +39,10 @@ class Simple1DHistogram(PDF):
         self.mass[bins - 1] += (particles == self.upper_bound).sum()
 
         # Normalize
-        self.mass = self.mass / (self.mass.sum() * (self.upper_bound - self.lower_bound) / bins)
+        if self.upper_bound == self.lower_bound:
+            self.mass = self.mass / (self.mass.sum() + epsilon)
+        else:
+            self.mass = self.mass / (self.mass.sum() * (self.upper_bound - self.lower_bound) / bins)
 
     def _merge_intervals(self, pdf: "Simple1DHistogram"):
         lower_bound = np.min([pdf.lower_bound, self.lower_bound])
@@ -59,7 +64,7 @@ class Simple1DHistogram(PDF):
                 s_lb, s_ub = intervals[j]
 
                 # Interval intersection
-                if lb > s_ub or s_lb > ub:
+                if lb >= s_ub or s_lb >= ub:
                     percentage_overlap = 0.0
                 else:
                     i_lb, i_ub = max([lb, s_lb]), min([ub, s_ub])
@@ -84,15 +89,18 @@ class Simple1DHistogram(PDF):
                                            self.mass, self.intervals) * self_importance_weight
 
             local_mass += mass_intersection(i_pdf_lower, min([i_pdf_upper + 1, pdf.mass.size]),
-                                     lb, ub,
-                                     pdf.mass, pdf.intervals) * pdf_importance_weight
+                                            lb, ub,
+                                            pdf.mass, pdf.intervals) * pdf_importance_weight
 
             mass[i] = local_mass
 
             i_self_lower = i_self_upper
             i_pdf_lower = i_pdf_upper
 
-        mass = mass / (mass.sum() * (upper_bound - lower_bound) / bins)
+        if upper_bound == lower_bound:
+            mass = mass / (mass.sum() + epsilon)
+        else:
+            mass = mass / (mass.sum() * (upper_bound - lower_bound) / bins)
 
         return Simple1DHistogram.of(bins=bins,
                                     mass=mass, intervals=intervals,

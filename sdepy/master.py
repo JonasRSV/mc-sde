@@ -23,10 +23,8 @@ def run(job: Job, processes: int, parent: str = None):
         info=info
     )
 
-    print("Bcasting")
     comm.bcast(job, root=MPI.ROOT)
     pdfs = comm.gather(None, root=MPI.ROOT)
-    print("Gathered")
 
     # TODO merge with recursive doubling approach
     pdf = pdfs[0]

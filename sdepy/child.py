@@ -9,7 +9,6 @@ def raw_run(comm, job: Job, rank: int):
     particles = None
     while not sde.stop():
         _, particles = sde.step()
-        print("Step")
 
     pdf.fit(particles)
     comm.gather(pdf, root=0)
@@ -24,9 +23,7 @@ if __name__ == "__main__":
     rank = comm.Get_rank()
 
     job = None
-    print("Waiting")
     job = comm.bcast(job, root=0)
-    print("Received")
 
     job.init_on_process()
 

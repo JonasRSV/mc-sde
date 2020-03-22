@@ -22,7 +22,6 @@ class SDE(ABC):
         raise NotImplementedError()
 
 
-
 class PDF(ABC):
 
     @abstractmethod

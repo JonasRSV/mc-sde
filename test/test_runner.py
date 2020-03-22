@@ -9,7 +9,7 @@ import seaborn as sb
 
 
 def drift(t, x):
-    return 0
+    return 1
 
 
 def diffusion(t, x):
@@ -18,14 +18,14 @@ def diffusion(t, x):
 
 class TestRunner(unittest.TestCase):
     def test_runner(self):
-        sde = Ito1D(particles=50000,
+        sde = Ito1D(particles=10000,
                     x0=0.0,
                     drift=drift,
                     diffusion=diffusion,
                     sigma=1,
                     t0=0.0,
                     dt=1e-2,
-                    T=1.0)
+                    T=2.0)
 
         job = Job(
             sde=sde,

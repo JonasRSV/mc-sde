@@ -1,5 +1,12 @@
 __init__.py
 .idea/
 .venv/
+build/
+dist/
+sdepy.egg-info/
+demo/__pycache__/
+demo/.ipynb_checkpoints/
+
+
 
 
