@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Tuple, List
 import numpy as np
 
 
@@ -21,6 +21,11 @@ class SDE(ABC):
     def preprocess(self):
         raise NotImplementedError()
 
+    @property
+    @abstractmethod
+    def steps(self) -> int:  # returns the total number of steps left
+        raise NotImplementedError()
+
 
 class PDF(ABC):
 
@@ -40,15 +45,30 @@ class PDF(ABC):
     def preprocess(self):
         raise NotImplementedError()
 
+    @property
+    @abstractmethod
+    def mean(self) -> float:  # mean of distribution
+        raise NotImplementedError()
+
 
 class Job:
     RAW = 0
+    Video = 1
 
-    def __init__(self, sde: SDE, pdf: PDF, mode: int):
+    def __init__(self, sde: SDE, pdf: PDF, mode: int, settings: dict):
         self.sde = sde
         self.pdf = pdf
         self.mode = mode
+        self.settings = settings
 
     def init_on_process(self):
         self.sde.preprocess()
         self.pdf.preprocess()
+
+
+class Result:
+    def __init__(self, distributions):
+        self.distributions: List[PDF] = distributions
+
+    def extend(self, result):
+        self.distributions.extend(result.distributions)

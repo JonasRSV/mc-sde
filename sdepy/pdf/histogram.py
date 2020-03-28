@@ -8,16 +8,21 @@ epsilon = 1e-5
 
 class Simple1DHistogram(PDF):
 
+    @property
+    def mean(self) -> float:
+        return self._mean
+
     def __init__(self, bins: int, *args, **kwargs):
         self.bins = bins
 
     @staticmethod
-    def of(bins: int, mass: np.ndarray, intervals: list, lower_bound: np.float, upper_bound: np.float):
+    def of(bins: int, mass: np.ndarray, intervals: list, lower_bound: np.float, upper_bound: np.float, mean: np.float):
         histogram = Simple1DHistogram(bins)
         histogram.mass = mass
         histogram.intervals = intervals
         histogram.lower_bound = lower_bound
         histogram.upper_bound = upper_bound
+        histogram._mean = mean
         return histogram
 
     def fit(self, particles: np.ndarray):
@@ -43,6 +48,8 @@ class Simple1DHistogram(PDF):
             self.mass = self.mass / (self.mass.sum() + epsilon)
         else:
             self.mass = self.mass / (self.mass.sum() * (self.upper_bound - self.lower_bound) / bins)
+
+        self._mean = particles.mean()
 
     def _merge_intervals(self, pdf: "Simple1DHistogram"):
         lower_bound = np.min([pdf.lower_bound, self.lower_bound])
@@ -104,12 +111,13 @@ class Simple1DHistogram(PDF):
 
         return Simple1DHistogram.of(bins=bins,
                                     mass=mass, intervals=intervals,
-                                    lower_bound=lower_bound, upper_bound=upper_bound)
+                                    lower_bound=lower_bound, upper_bound=upper_bound,
+                                    mean=self.mean * self_importance_weight + pdf.mean * pdf_importance_weight)
 
     def merge(self, pdf: "PDF"):
 
         m = defaultdict(
-            default_factor=lambda:
+            default_factory=lambda:
             NotImplementedError(f"Merging {pdf.__class__} with {self.__class__} is not implemented"))
 
         m[self.__class__] = self._merge_intervals

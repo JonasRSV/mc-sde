@@ -1,5 +1,11 @@
-from sdepy.core import SDE, Job
+from sdepy.core import SDE, Job, PDF
 from mpi4py import MPI
+import numpy as np
+
+
+def _fit_and_gather(pdf: PDF, particles: np.ndarray, comm):
+    pdf.fit(particles)
+    comm.gather(pdf, root=0)
 
 
 def raw_run(comm, job: Job, rank: int):
@@ -10,12 +16,29 @@ def raw_run(comm, job: Job, rank: int):
     while not sde.stop():
         _, particles = sde.step()
 
-    pdf.fit(particles)
-    comm.gather(pdf, root=0)
+    _fit_and_gather(pdf, particles, comm)
+
+
+def video_run(comm, job: Job, rank: int):
+    sde = job.sde
+    pdf = job.pdf
+    spf = job.settings["steps_per_frame"] # steps per frame
+
+    particles = None
+    steps = 1
+    while not sde.stop():
+        _, particles = sde.step()
+        if steps % spf == 0:
+            _fit_and_gather(pdf, particles, comm)
+
+        steps += 1
+
+    #_fit_and_gather(pdf, particles, comm)
 
 
 jobs = {
-    Job.RAW: raw_run
+    Job.RAW: raw_run,
+    Job.Video: video_run
 }
 
 if __name__ == "__main__":

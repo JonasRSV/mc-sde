@@ -2,6 +2,7 @@ FROM python:3.6-stretch
 
 RUN apt-get update -y
 RUN apt-get install -y openmpi-bin libopenmpi-dev
+RUN apt-get install -y ffmpeg
 
 COPY demo demo
 COPY sdepy sdepy
