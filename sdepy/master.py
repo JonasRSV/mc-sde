@@ -4,17 +4,11 @@ from mpi4py import MPI
 from sdepy import child
 from sdepy.core import Job, Result, PDF
 import inspect
+import time
 
 
 def _gather_pdf(comm) -> PDF:
-    # TODO merge with recursive doubling approach
-    pdfs = comm.gather(None, root=MPI.ROOT)
-    pdf = pdfs[0]
-    if len(pdfs) > 0:
-        for _pdf in pdfs[1:]:
-            pdf = pdf.merge(_pdf)
-
-    return pdf
+    return comm.gather(None, root=MPI.ROOT)[0]
 
 
 def raw_collect(job, comm):
@@ -63,7 +57,11 @@ def run(job: Job, processes: int, parent: str = None) -> Result:
         info=info
     )
 
+    timestamp = time.time()
+
     result = runners[job.mode](job, comm)
+
+    execution_time = time.time() - timestamp
     comm.Disconnect()
 
-    return result
+    return result, execution_time

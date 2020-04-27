@@ -3,7 +3,9 @@ from sdepy.pdf.histogram import Simple1DHistogram
 from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import  tqdm
 import matplotlib.animation as animation
+import seaborn as sb
 
 
 def make_time_1dx_distplot_video(pdfs: List[PDF],
@@ -11,7 +13,6 @@ def make_time_1dx_distplot_video(pdfs: List[PDF],
                                  steps_per_frame: int,
                                  dt,
                                  save=True):
-
     seconds_per_step = dt * steps_per_frame
     fig, ax = plt.subplots(figsize=(15, 8))
     frames = []
@@ -27,9 +28,9 @@ def make_time_1dx_distplot_video(pdfs: List[PDF],
         high = ax.vlines([pdf.upper_bound], ymin=-10, ymax=10, colors="red")
 
         legend = fig.legend((lp[0], high, low, mean), ("time: %.2f" % (seconds_per_step * i),
-                                 "worst: %.2f" % (pdf.upper_bound),
-                                 "best: %.2f" % (pdf.lower_bound),
-                                 "average: %.2f" % (pdf.mean)), fontsize=14)
+                                                       "worst: %.2f" % (pdf.upper_bound),
+                                                       "best: %.2f" % (pdf.lower_bound),
+                                                       "average: %.2f" % (pdf.mean)), fontsize=14)
 
         ax.add_artist(legend)
         frames.append((lp[0], fill, legend, low, mean, high))
@@ -46,6 +47,41 @@ def make_time_1dx_distplot_video(pdfs: List[PDF],
         ani.save("animation.mp4", writer=writer)
 
     return ani
+
+
+def three_dee_plot(pdfs, steps_per_frame, dt, save=True):
+    seconds_per_step = steps_per_frame * dt
+    max_p = max([pdf.upper_bound for pdf in pdfs])
+    max_t = len(pdfs) * seconds_per_step
+
+    T = []
+    P = []
+    Z = []
+
+    ps = np.linspace(0, max_p, 100000)
+    min_max = 10.0
+    for t in tqdm(np.linspace(0, max_t, 200)):
+        _pdf = max([int(t / seconds_per_step) - 1, 0])
+        pdf = pdfs[_pdf]
+        density = pdf(ps)
+
+        if density.max() > 0.0:
+            min_max = np.minimum(min_max, density.max())
+        T.append(t)
+        Z.append(density)
+
+    Z = np.array(Z)
+    Z = np.minimum(Z, min_max)
+
+    plt.figure(figsize=(20, 10))
+    plt.title("Virus model", fontsize=18)
+    plt.contourf(T, ps, Z.T, vmin=0.0, vmax=min_max)
+    plt.ylabel("Infected", fontsize=15)
+    plt.xlabel("Time", fontsize=15)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    if save:
+        plt.savefig("../images/virus-model.png", bbox_inches="tight")
 
 
 if __name__ == "__main__":

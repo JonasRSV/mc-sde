@@ -2,6 +2,7 @@ import numpy as np
 
 from sdepy.core import PDF
 from collections import defaultdict
+import time
 
 epsilon = 1e-5
 
@@ -29,6 +30,7 @@ class Simple1DHistogram(PDF):
         self._fit_particles(particles, self.bins)
 
     def _fit_particles(self, particles: np.ndarray, bins: int):
+        #print(f"entry {particles.shape}")
         self.lower_bound, self.upper_bound = particles.min(), particles.max()
         interval_sz = (self.upper_bound - self.lower_bound) / bins
 
@@ -37,9 +39,12 @@ class Simple1DHistogram(PDF):
 
         self.mass = np.zeros(bins)
 
+        timestamp = time.time()
         for i, (lb, ub) in enumerate(self.intervals):
             mask = (lb <= particles) & (particles < ub)
             self.mass[i] = mask.sum()
+
+        #print(f"Fitting {particles.size} particles: {time.time() - timestamp} -- {particles.shape}")
 
         self.mass[bins - 1] += (particles == self.upper_bound).sum()
 

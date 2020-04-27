@@ -22,10 +22,10 @@ def diffusion(t, x):
 # probability of transmission is p("healty meet sick" -> healthy gets sick")
 # rate of interaction is the number of individuals each individual meets each day
 
-population_sz = 1500000
-probability_of_transmission = 0.1
-rate_of_interaction = 3 # How many people each individual meets per day
-rate_of_recovery = 14 # How many days to recover 
+population_sz = int(1e7)
+probability_of_transmission = 0.01
+rate_of_interaction = 13 # How many people each individual meets per day
+rate_of_recovery = 30 # How many days to recover 
 
 has_been_sick = None
 def covid_drift(t, x):
@@ -34,7 +34,7 @@ def covid_drift(t, x):
         has_been_sick = np.zeros_like(x, dtype=np.float64)
     
     recovering = x * (1.0 / rate_of_recovery)
-    has_been_sick = has_been_sick + recovering * 0.1
+    has_been_sick = has_been_sick + recovering * 1.0
     
     return -recovering
     
